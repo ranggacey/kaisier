@@ -111,7 +111,7 @@ export default function KaisierApp() {
   };
 
   return (
-    <div className="max-w-md mx-auto min-h-screen bg-slate-50 flex flex-col font-sans pb-36 shadow-2xl antialiased selection:bg-[#4A6278] selection:text-[#E5D3B3]">
+    <div className="max-w-md mx-auto min-h-screen bg-slate-50 flex flex-col font-sans pb-48 shadow-2xl antialiased selection:bg-[#4A6278] selection:text-[#E5D3B3]">
       {/* Header Premium LI-NING Style */}
       <header className="bg-gradient-to-br from-[#2D3748] via-[#4A6278] to-[#3B4D60] text-[#E5D3B3] p-6 rounded-b-[2.5rem] shadow-xl relative overflow-hidden">
         <div className="absolute -right-10 -top-10 w-40 h-40 bg-[#E5D3B3]/10 rounded-full blur-2xl pointer-events-none" />
