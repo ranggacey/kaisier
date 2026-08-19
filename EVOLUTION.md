@@ -22,3 +22,9 @@
 - Used dummy data to show transaction ID, date, total, items, payment method, and cashier.
 - Added a "Transaksi" item to the main bottom navigation bar, updating the layout to a 4-column grid.
 - Imported `History` icon from `lucide-react` for the new navigation item.
+
+## [$(date '+%Y-%m-%d %H:%M')] Implement Add Product Page
+- Created new page `/produk/tambah` for adding new products.
+- The page includes a form with fields for product name, price, and stock.
+- Form submission is currently a simulation and logs data to the console.
+- Added "Cancel" button to go back to the product list.
