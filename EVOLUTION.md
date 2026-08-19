@@ -4,3 +4,8 @@
 - Implemented transaction history page at `/transactions`
 - Implemented sales report and stock report pages
 - Optimized bottom navigation layout and padding
+
+## [2026-08-19 04:00] Fixed build & added Login Page
+- Fixed missing `lucide-react` dependency build error
+- Added basic `/login` page with mock authentication
+
