@@ -1,5 +1,3 @@
-# Evolution History
-
 ## [2026-08-19 01:00] Add Transaction History & Reports
 - Implemented transaction history page at `/transactions`
 - Implemented sales report and stock report pages
@@ -19,3 +17,8 @@
 - Added base Cashier page (`/`), Products page (`/produk`), and Reports page (`/laporan`).
 - Created simple UI structure for Products management with dummy data.
 
+## [2026-08-19 13:00] Implement Transaction History Page
+- Created new page `/transactions` to display a list of past sales transactions.
+- Used dummy data to show transaction ID, date, total, items, payment method, and cashier.
+- Added a "Transaksi" item to the main bottom navigation bar, updating the layout to a 4-column grid.
+- Imported `History` icon from `lucide-react` for the new navigation item.
