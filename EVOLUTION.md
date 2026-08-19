@@ -13,3 +13,9 @@
 - Improved login page UI with modern design, icons, and better error handling.
 - Installed ESLint and `eslint-config-next` to improve code quality checks.
 - Refactored login logic to use state for error messages instead of `alert()`.
+
+## [2026-08-19 10:00] Implement Core Layout & Base Pages
+- Added Bottom Navigation layout to `layout.tsx` for core application navigation.
+- Added base Cashier page (`/`), Products page (`/produk`), and Reports page (`/laporan`).
+- Created simple UI structure for Products management with dummy data.
+
