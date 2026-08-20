@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Pencil, Trash2 } from 'lucide-react';
 
 const products = [
   { id: 'PROD001', name: 'Kopi Susu Gula Aren', price: 18000, stock: 50 },
@@ -40,6 +40,9 @@ export default function ProductsPage() {
               <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
                 Stok
               </th>
+              <th className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+                Aksi
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white">
@@ -56,6 +59,16 @@ export default function ProductsPage() {
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-500">
                   {product.stock}
+                </td>
+                <td className="whitespace-nowrap px-6 py-4 text-center text-sm font-medium">
+                  <div className="flex items-center justify-center gap-4">
+                    <button className="text-blue-600 hover:text-blue-900">
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button className="text-red-600 hover:text-red-900">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
