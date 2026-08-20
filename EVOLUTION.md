@@ -23,6 +23,13 @@
 - Added a "Transaksi" item to the main bottom navigation bar, updating the layout to a 4-column grid.
 - Imported `History` icon from `lucide-react` for the new navigation item.
 
+## [2026-08-20 04:00] Implement Core Cashier UI
+- Replaced placeholder on the main page (`/`) with a functional cashier interface.
+- Implemented a two-panel layout: a grid for product selection and a side panel for the shopping cart.
+- Used `useState` to manage cart items (add, update quantity, remove).
+- Displayed cart total and a "Pay Now" button.
+- Styled using Tailwind CSS consistent with the rest of the application.
+
 ## [$(date '+%Y-%m-%d %H:%M')] Implement Add Product Page
 - Created new page `/produk/tambah` for adding new products.
 - The page includes a form with fields for product name, price, and stock.
