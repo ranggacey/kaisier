@@ -1,16 +1,42 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { Loader2, ArrowLeft } from 'lucide-react';
 
-export default function AddProductPage() {
+export default function EditProductPage() {
+  const params = useParams();
   const router = useRouter();
+  const productId = params.id as string;
+
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [stock, setStock] = useState('');
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const res = await fetch(`/api/products/${productId}`);
+        const data = await res.json();
+        if (data.success) {
+          setName(data.data.name);
+          setPrice(data.data.price.toString());
+          setStock(data.data.stock.toString());
+        } else {
+          setError(data.error || 'Produk tidak ditemukan');
+        }
+      } catch {
+        setError('Terjadi kesalahan saat memuat produk');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [productId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,8 +44,8 @@ export default function AddProductPage() {
     setSaving(true);
 
     try {
-      const res = await fetch('/api/products', {
-        method: 'POST',
+      const res = await fetch(`/api/products/${productId}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name,
@@ -31,14 +57,22 @@ export default function AddProductPage() {
       if (data.success) {
         router.push('/produk');
       } else {
-        setError(data.error || 'Gagal menambahkan produk');
+        setError(data.error || 'Gagal memperbarui produk');
       }
     } catch {
-      setError('Terjadi kesalahan saat menambahkan produk');
+      setError('Terjadi kesalahan saat memperbarui produk');
     } finally {
       setSaving(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="p-4 flex items-center justify-center h-[calc(100vh-64px)]">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-4">
@@ -49,7 +83,7 @@ export default function AddProductPage() {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <h1 className="text-2xl font-bold">Tambah Produk Baru</h1>
+        <h1 className="text-2xl font-bold">Ubah Produk</h1>
       </div>
 
       {error && (
@@ -88,7 +122,7 @@ export default function AddProductPage() {
         </div>
         <div>
           <label htmlFor="stock" className="block text-sm font-medium text-gray-700">
-            Stok Awal
+            Stok
           </label>
           <input
             type="number"
@@ -112,7 +146,7 @@ export default function AddProductPage() {
                 Menyimpan...
               </>
             ) : (
-              'Simpan Produk'
+              'Simpan Perubahan'
             )}
           </button>
           <button
