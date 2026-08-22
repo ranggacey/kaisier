@@ -29,3 +29,11 @@
 - Mengubah halaman Transaksi (`/transactions`) dari data dummy ke fetch real-time dari API dengan loading state.
 - Mengubah halaman Laporan (`/laporan`) dari data dummy ke agregasi real-time dari API transaksi (total pendapatan, total transaksi, item terjual, 5 transaksi terakhir).
 - Memperbaiki ESLint warning (unused imports).
+
+## [2026-08-22 18:45] Implementasi Detail Transaksi & Cetak Struk
+- Membuat API `GET /api/transactions/[id]` untuk mengambil detail transaksi tunggal.
+- Menambahkan modal detail transaksi pada halaman `/transactions` dengan tombol "Lihat Detail" (ikon Eye) pada kolom Aksi.
+- Modal menampilkan: ID transaksi, tanggal, kasir, metode pembayaran, daftar item (nama, harga, jumlah, subtotal), dan total.
+- Menambahkan tombol "Cetak Struk" (ikon Printer) yang memanggil `window.print()` untuk mencetak struk transaksi.
+- Menambahkan tombol "Tutup" dan klik overlay untuk menutup modal.
+- Memperbaiki ESLint warning (unused imports: ObjectId, MoreVertical).
