@@ -20,3 +20,12 @@
 - Menambahkan indikator stok rendah (≤10) dan stok habis pada tabel produk.
 - Menambahkan navigasi kembali (back button) pada halaman tambah/edit produk.
 - Memperbaiki semua warning ESLint (unused variables).
+
+## [2026-08-22 15:30] Implementasi Transaksi & Laporan Real-time dari Database
+- Membuat model Transaksi di `lib/models/Transaction.ts` dengan item detail, total, metode pembayaran, dan kasir.
+- Membuat API `/api/transactions` (GET untuk riwayat, POST untuk membuat transaksi baru dengan transaksi database atomic).
+- Transaksi checkout sekarang menggunakan MongoDB session untuk atomicity: insert transaksi + kurangi stok produk dalam satu transaksi ACID.
+- Memperbarui halaman Kasir (`/`): tambah pemilihan metode pembayaran (Tunai/QRIS/Debit/Kredit) dan input nama kasir.
+- Mengubah halaman Transaksi (`/transactions`) dari data dummy ke fetch real-time dari API dengan loading state.
+- Mengubah halaman Laporan (`/laporan`) dari data dummy ke agregasi real-time dari API transaksi (total pendapatan, total transaksi, item terjual, 5 transaksi terakhir).
+- Memperbaiki ESLint warning (unused imports).

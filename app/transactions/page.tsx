@@ -1,39 +1,25 @@
-import { CreditCard, MoreVertical } from 'lucide-react';
+'use client';
 
-const transactions = [
-  {
-    id: 'TRX001',
-    date: '2026-08-19 10:05',
-    total: 33000,
-    items: 2,
-    paymentMethod: 'QRIS',
-    cashier: 'Yuna',
-  },
-  {
-    id: 'TRX002',
-    date: '2026-08-19 10:02',
-    total: 18000,
-    items: 1,
-    paymentMethod: 'Tunai',
-    cashier: 'Yuna',
-  },
-  {
-    id: 'TRX003',
-    date: '2026-08-19 09:58',
-    total: 45000,
-    items: 3,
-    paymentMethod: 'QRIS',
-    cashier: 'Rangga',
-  },
-  {
-    id: 'TRX004',
-    date: '2026-08-19 09:55',
-    total: 12000,
-    items: 1,
-    paymentMethod: 'Debit',
-    cashier: 'Yuna',
-  },
-];
+import { useState, useEffect } from 'react';
+import { CreditCard, MoreVertical, Loader2 } from 'lucide-react';
+
+interface TransactionItem {
+  productId: string;
+  productName: string;
+  price: number;
+  quantity: number;
+  subtotal: number;
+}
+
+interface Transaction {
+  _id: string;
+  id: string;
+  items: TransactionItem[];
+  total: number;
+  paymentMethod: 'Tunai' | 'QRIS' | 'Debit' | 'Kredit';
+  cashier: string;
+  createdAt: string;
+}
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('id-ID', {
@@ -43,7 +29,50 @@ const formatCurrency = (amount: number) => {
   }).format(amount);
 };
 
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleString('id-ID', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
 export default function TransactionsPage() {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchTransactions = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/transactions');
+      const data = await res.json();
+      if (data.success) {
+        setTransactions(data.data);
+      } else {
+        setError(data.error || 'Gagal memuat transaksi');
+      }
+    } catch {
+      setError('Terjadi kesalahan saat memuat transaksi');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTransactions();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="p-4 flex items-center justify-center h-[calc(100vh-100px)]">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
   return (
     <div className="p-4">
       <div className="flex items-center justify-between mb-4">
@@ -54,6 +83,12 @@ export default function TransactionsPage() {
           </p>
         </div>
       </div>
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
 
       <div className="overflow-x-auto rounded-lg border">
         <table className="min-w-full divide-y divide-gray-200">
@@ -83,36 +118,44 @@ export default function TransactionsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white">
-            {transactions.map((trx) => (
-              <tr key={trx.id}>
-                <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
-                  {trx.id}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                  {trx.date}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium text-gray-800">
-                  {formatCurrency(trx.total)}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-center text-sm text-gray-500">
-                  {trx.items}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
-                    <CreditCard className="h-3 w-3" />
-                    {trx.paymentMethod}
-                  </span>
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                  {trx.cashier}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-center text-sm">
-                  <button className="text-gray-500 hover:text-gray-800">
-                    <MoreVertical className="h-4 w-4" />
-                  </button>
+            {transactions.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                  Belum ada transaksi.
                 </td>
               </tr>
-            ))}
+            ) : (
+              transactions.map((trx) => (
+                <tr key={trx.id}>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
+                    {trx.id}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                    {formatDate(trx.createdAt)}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium text-gray-800">
+                    {formatCurrency(trx.total)}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-center text-sm text-gray-500">
+                    {trx.items.reduce((sum, item) => sum + item.quantity, 0)}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
+                      <CreditCard className="h-3 w-3" />
+                      {trx.paymentMethod}
+                    </span>
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                    {trx.cashier}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-center text-sm">
+                    <button className="text-gray-500 hover:text-gray-800">
+                      <MoreVertical className="h-4 w-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

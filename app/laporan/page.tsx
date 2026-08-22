@@ -1,25 +1,106 @@
-import { BarChart, DollarSign, Package, ShoppingCart } from 'lucide-react';
+'use client';
 
-// Dummy data for demonstration
-const summaryData = {
-  totalRevenue: 5230000,
-  totalTransactions: 142,
-  itemsSold: 320,
-};
+import { useState, useEffect } from 'react';
+import { BarChart, DollarSign, Package, ShoppingCart, Loader2 } from 'lucide-react';
 
-const recentTransactions = [
-  { id: 'TRX001', date: '2026-08-20 10:30', total: 75000, items: 3 },
-  { id: 'TRX002', date: '2026-08-20 10:25', total: 45000, items: 2 },
-  { id: 'TRX003', date: '2026-08-20 10:18', total: 120000, items: 5 },
-  { id: 'TRX004', date: '2026-08-20 10:12', total: 36000, items: 2 },
-  { id: 'TRX005', date: '2026-08-20 10:05', total: 88000, items: 4 },
-];
+interface TransactionItem {
+  productId: string;
+  productName: string;
+  price: number;
+  quantity: number;
+  subtotal: number;
+}
+
+interface Transaction {
+  _id: string;
+  id: string;
+  items: TransactionItem[];
+  total: number;
+  paymentMethod: 'Tunai' | 'QRIS' | 'Debit' | 'Kredit';
+  cashier: string;
+  createdAt: string;
+}
+
+interface SummaryData {
+  totalRevenue: number;
+  totalTransactions: number;
+  itemsSold: number;
+}
 
 const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+  }).format(amount);
+};
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleString('id-ID', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 };
 
 export default function ReportsPage() {
+  const [summary, setSummary] = useState<SummaryData>({
+    totalRevenue: 0,
+    totalTransactions: 0,
+    itemsSold: 0,
+  });
+  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/transactions');
+      const data = await res.json();
+      if (data.success) {
+        const transactions = data.data as Transaction[];
+        
+        // Calculate summary
+        const totalRevenue = transactions.reduce((sum, t) => sum + t.total, 0);
+        const totalTransactions = transactions.length;
+        const itemsSold = transactions.reduce(
+          (sum, t) => sum + t.items.reduce((itemSum, item) => itemSum + item.quantity, 0),
+          0
+        );
+
+        setSummary({
+          totalRevenue,
+          totalTransactions,
+          itemsSold,
+        });
+
+        // Get recent 5 transactions
+        setRecentTransactions(transactions.slice(0, 5));
+      } else {
+        setError(data.error || 'Gagal memuat data laporan');
+      }
+    } catch {
+      setError('Terjadi kesalahan saat memuat laporan');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="p-4 bg-gray-50 min-h-full flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 bg-gray-50 min-h-full">
       <div className="flex items-center justify-between mb-6">
@@ -29,6 +110,12 @@ export default function ReportsPage() {
         </div>
       </div>
 
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg shadow flex items-center gap-4">
@@ -37,7 +124,7 @@ export default function ReportsPage() {
           </div>
           <div>
             <p className="text-sm text-gray-500">Total Pendapatan</p>
-            <p className="text-xl font-bold">{formatCurrency(summaryData.totalRevenue)}</p>
+            <p className="text-xl font-bold">{formatCurrency(summary.totalRevenue)}</p>
           </div>
         </div>
         <div className="bg-white p-4 rounded-lg shadow flex items-center gap-4">
@@ -46,7 +133,7 @@ export default function ReportsPage() {
           </div>
           <div>
             <p className="text-sm text-gray-500">Total Transaksi</p>
-            <p className="text-xl font-bold">{summaryData.totalTransactions}</p>
+            <p className="text-xl font-bold">{summary.totalTransactions}</p>
           </div>
         </div>
         <div className="bg-white p-4 rounded-lg shadow flex items-center gap-4">
@@ -55,7 +142,7 @@ export default function ReportsPage() {
           </div>
           <div>
             <p className="text-sm text-gray-500">Item Terjual</p>
-            <p className="text-xl font-bold">{summaryData.itemsSold}</p>
+            <p className="text-xl font-bold">{summary.itemsSold}</p>
           </div>
         </div>
       </div>
@@ -79,14 +166,24 @@ export default function ReportsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
-              {recentTransactions.map((tx) => (
-                <tr key={tx.id}>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">{tx.id}</td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{tx.date}</td>
-                  <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-500">{formatCurrency(tx.total)}</td>
-                  <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-500">{tx.items}</td>
+              {recentTransactions.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                    Belum ada transaksi.
+                  </td>
                 </tr>
-              ))}
+              ) : (
+                recentTransactions.map((tx) => (
+                  <tr key={tx.id}>
+                    <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">{tx.id}</td>
+                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{formatDate(tx.createdAt)}</td>
+                    <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-500">{formatCurrency(tx.total)}</td>
+                    <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-500">
+                      {tx.items.reduce((sum, item) => sum + item.quantity, 0)}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

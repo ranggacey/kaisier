@@ -17,12 +17,16 @@ type CartItem = {
   quantity: number;
 };
 
+type PaymentMethod = 'Tunai' | 'QRIS' | 'Debit' | 'Kredit';
+
 export default function CashierPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Tunai');
+  const [cashier, setCashier] = useState('Yuna');
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -102,27 +106,36 @@ export default function CashierPage() {
     setError(null);
 
     try {
-      // Simulasi proses checkout - di sini nanti akan call API transaksi
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      // Update stok produk (simulasi)
-      for (const item of cart) {
-        const product = products.find((p) => p.id === item.id);
-        if (product) {
-          await fetch(`/api/products/${item.id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ stock: product.stock - item.quantity }),
-          });
-        }
-      }
+      const transactionItems = cart.map((item) => ({
+        productId: item.id,
+        productName: item.name,
+        price: item.price,
+        quantity: item.quantity,
+      }));
 
-      alert('Transaksi berhasil! Struk akan dicetak.');
-      setCart([]);
-      // Refresh produk
-      const res = await fetch('/api/products');
+      const res = await fetch('/api/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: transactionItems,
+          total,
+          paymentMethod,
+          cashier,
+        }),
+      });
+
       const data = await res.json();
-      if (data.success) setProducts(data.data);
+
+      if (data.success) {
+        alert(`Transaksi berhasil! ID: ${data.data.id}`);
+        setCart([]);
+        // Refresh produk
+        const productsRes = await fetch('/api/products');
+        const productsData = await productsRes.json();
+        if (productsData.success) setProducts(productsData.data);
+      } else {
+        setError(data.error || 'Gagal memproses transaksi');
+      }
     } catch {
       setError('Gagal memproses transaksi');
     } finally {
@@ -225,6 +238,40 @@ export default function CashierPage() {
             <span>Total</span>
             <span>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(total)}</span>
           </div>
+          
+          {/* Payment Method Selector */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Metode Pembayaran</label>
+            <div className="grid grid-cols-2 gap-2">
+              {(['Tunai', 'QRIS', 'Debit', 'Kredit'] as PaymentMethod[]).map((method) => (
+                <button
+                  key={method}
+                  type="button"
+                  onClick={() => setPaymentMethod(method)}
+                  className={`p-3 rounded-lg border-2 text-sm font-medium transition-colors ${
+                    paymentMethod === method
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                  }`}
+                >
+                  {method}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Cashier Input */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Kasir</label>
+            <input
+              type="text"
+              value={cashier}
+              onChange={(e) => setCashier(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Nama kasir"
+            />
+          </div>
+
           <button
             onClick={handleCheckout}
             disabled={cart.length === 0 || processing}
