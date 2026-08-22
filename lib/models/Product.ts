@@ -6,6 +6,8 @@ export interface Product {
   name: string;
   price: number;
   stock: number;
+  categoryId?: string;
+  categoryName?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -14,6 +16,7 @@ export interface ProductInput {
   name: string;
   price: number;
   stock: number;
+  categoryId?: string;
 }
 
 export function generateProductId(): string {

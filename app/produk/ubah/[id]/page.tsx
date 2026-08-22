@@ -4,6 +4,11 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Loader2, ArrowLeft } from 'lucide-react';
 
+interface Category {
+  id: string;
+  name: string;
+}
+
 export default function EditProductPage() {
   const params = useParams();
   const router = useRouter();
@@ -12,21 +17,33 @@ export default function EditProductPage() {
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [stock, setStock] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchProduct = async () => {
+    const fetchData = async () => {
       try {
-        const res = await fetch(`/api/products/${productId}`);
-        const data = await res.json();
-        if (data.success) {
-          setName(data.data.name);
-          setPrice(data.data.price.toString());
-          setStock(data.data.stock.toString());
+        const [productRes, categoriesRes] = await Promise.all([
+          fetch(`/api/products/${productId}`),
+          fetch('/api/categories'),
+        ]);
+        const [productData, categoriesData] = await Promise.all([
+          productRes.json(),
+          categoriesRes.json(),
+        ]);
+        if (productData.success) {
+          setName(productData.data.name);
+          setPrice(productData.data.price.toString());
+          setStock(productData.data.stock.toString());
+          setCategoryId(productData.data.categoryId || '');
         } else {
-          setError(data.error || 'Produk tidak ditemukan');
+          setError(productData.error || 'Produk tidak ditemukan');
+        }
+        if (categoriesData.success) {
+          setCategories(categoriesData.data);
         }
       } catch {
         setError('Terjadi kesalahan saat memuat produk');
@@ -35,7 +52,7 @@ export default function EditProductPage() {
       }
     };
 
-    fetchProduct();
+    fetchData();
   }, [productId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -51,6 +68,7 @@ export default function EditProductPage() {
           name,
           price: parseInt(price, 10),
           stock: parseInt(stock, 10),
+          categoryId: categoryId || undefined,
         }),
       });
       const data = await res.json();
@@ -133,6 +151,24 @@ export default function EditProductPage() {
             required
             min="0"
           />
+        </div>
+        <div>
+          <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700">
+            Kategori
+          </label>
+          <select
+            id="categoryId"
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          >
+            <option value="">-- Pilih Kategori (Opsional) --</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="flex gap-2">
           <button

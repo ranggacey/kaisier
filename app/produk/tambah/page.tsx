@@ -1,16 +1,38 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, ArrowLeft } from 'lucide-react';
+
+interface Category {
+  id: string;
+  name: string;
+}
 
 export default function AddProductPage() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [stock, setStock] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+  const [categories, setCategories] = useState<Category[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch('/api/categories');
+        const data = await res.json();
+        if (data.success) {
+          setCategories(data.data);
+        }
+      } catch {
+        // ignore
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,6 +47,7 @@ export default function AddProductPage() {
           name,
           price: parseInt(price, 10),
           stock: parseInt(stock, 10),
+          categoryId: categoryId || undefined,
         }),
       });
       const data = await res.json();
@@ -99,6 +122,24 @@ export default function AddProductPage() {
             required
             min="0"
           />
+        </div>
+        <div>
+          <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700">
+            Kategori
+          </label>
+          <select
+            id="categoryId"
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          >
+            <option value="">-- Pilih Kategori (Opsional) --</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="flex gap-2">
           <button

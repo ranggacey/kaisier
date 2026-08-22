@@ -1,13 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Loader2, AlertTriangle } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Loader2, AlertTriangle, Filter } from 'lucide-react';
 
 type Product = {
   id: string;
   name: string;
   price: number;
   stock: number;
+  categoryId?: string;
+  categoryName?: string;
 };
 
 type CartItem = {
@@ -17,36 +19,60 @@ type CartItem = {
   quantity: number;
 };
 
+type Category = {
+  id: string;
+  name: string;
+};
+
 type PaymentMethod = 'Tunai' | 'QRIS' | 'Debit' | 'Kredit';
 
 export default function CashierPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Tunai');
   const [cashier, setCashier] = useState('Yuna');
+  const [categoryFilter, setCategoryFilter] = useState<string>('');
+
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch('/api/products');
+      const data = await res.json();
+      if (data.success) {
+        setProducts(data.data);
+      } else {
+        setError(data.error || 'Gagal memuat produk');
+      }
+    } catch {
+      setError('Terjadi kesalahan saat memuat produk');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch('/api/categories');
+      const data = await res.json();
+      if (data.success) {
+        setCategories(data.data);
+      }
+    } catch {
+      // ignore
+    }
+  };
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await fetch('/api/products');
-        const data = await res.json();
-        if (data.success) {
-          setProducts(data.data);
-        } else {
-          setError(data.error || 'Gagal memuat produk');
-        }
-      } catch {
-        setError('Terjadi kesalahan saat memuat produk');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchProducts();
+    fetchCategories();
   }, []);
+
+  const filteredProducts = categoryFilter
+    ? products.filter((p) => p.categoryId === categoryFilter)
+    : products;
 
   const addToCart = (product: Product) => {
     if (product.stock <= 0) {
@@ -155,7 +181,24 @@ export default function CashierPage() {
     <div className="flex h-[calc(100vh-64px)] bg-gray-50">
       {/* Product Grid */}
       <div className="w-3/5 p-4 overflow-y-auto">
-        <h2 className="text-xl font-bold mb-4">Pilih Produk</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold">Pilih Produk</h2>
+          <div className="relative">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="pl-9 pr-8 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white appearance-none"
+            >
+              <option value="">Semua Kategori</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" />
@@ -163,7 +206,7 @@ export default function CashierPage() {
           </div>
         )}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {products.map((product) => (
+          {filteredProducts.map((product) => (
             <button
               key={product.id}
               onClick={() => addToCart(product)}
@@ -175,6 +218,9 @@ export default function CashierPage() {
               }`}
             >
               <p className="font-semibold text-sm truncate">{product.name}</p>
+              {product.categoryName && (
+                <p className="text-xs text-gray-400 mt-0.5">{product.categoryName}</p>
+              )}
               <p className="text-xs text-gray-600 mt-1">
                 {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(product.price)}
               </p>

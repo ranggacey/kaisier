@@ -37,3 +37,15 @@
 - Menambahkan tombol "Cetak Struk" (ikon Printer) yang memanggil `window.print()` untuk mencetak struk transaksi.
 - Menambahkan tombol "Tutup" dan klik overlay untuk menutup modal.
 - Memperbaiki ESLint warning (unused imports: ObjectId, MoreVertical).
+
+## [2026-08-22 21:30] Implementasi Manajemen Kategori Produk
+- Membuat model Kategori di `lib/models/Category.ts` dengan tipe TypeScript dan generator ID.
+- Membuat API RESTful untuk kategori (`/api/categories` dan `/api/categories/[id]`): GET (list/detail), POST (tambah), PUT (ubah), DELETE (hapus).
+- Menambahkan field `categoryId` dan `categoryName` pada model Produk.
+- Memperbarui API produk untuk validasi categoryId dan join data kategori via MongoDB aggregation.
+- Membuat halaman Manajemen Kategori (`/kategori`) dengan CRUD lengkap: tambah, ubah, hapus kategori via modal.
+- Menambahkan kolom Kategori dan filter dropdown pada halaman Produk (`/produk`).
+- Menambahkan dropdown kategori pada form Tambah Produk (`/produk/tambah`) dan Edit Produk (`/produk/ubah/[id]`).
+- Menambahkan filter kategori dan tampilan nama kategori pada halaman Kasir (`/`) untuk mempermudah pencarian produk.
+- Menambahkan navigasi Kategori (ikon Tag) pada bottom navigation bar (5 kolom).
+- Memperbaiki ESLint warning (unused imports).
